@@ -7,7 +7,6 @@ import xarray as xr
 import pandas as pd
 
 import warnings
-from itertools import combinations
 from dask.diagnostics import ProgressBar
 
 
@@ -33,29 +32,6 @@ def apply_bitmask(arr) -> xr.DataArray or np.array:
     arr = arr.where(bad == 0)
 
     return arr
-
-
-@dask.delayed
-def calculate_nbr(data):
-    """Calculate NBR in xarray DataArray
-
-    Calculate the Normalized Burn Ratio for a DataArray with Landsat data. This
-    function uses the NBR standard formula: (NIR-SWIR)/(NIR+SWIR).
-
-    Args:
-        - data (xr.DataArray): A data array with the "nir08" and the "swir16"
-          bands.
-
-    Returns:
-        xr.DataArray
-    """
-
-    # Calculate NBR manually using the normal formula
-    nbr_manual = (
-        data.sel(band="nir08").squeeze() - data.sel(band="swir16").squeeze()
-    ) / (data.sel(band="nir08").squeeze() + data.sel(band="swir16").squeeze())
-
-    return nbr_manual
 
 
 @dask.delayed
@@ -88,8 +64,7 @@ def calculate_composite(
     apply_qa_bitmask=True,
     geometry=None,
     event_id=None,
-    mask=False,
-    save=None,
+    save=None
 ) -> xr.DataArray:
     """Clean imagery array and calculate mean composite for each geometry
 
@@ -110,7 +85,8 @@ def calculate_composite(
           won't save it.
 
     Returns:
-        xr.DataArray
+        Delayed xr.Dataset. To get the array in-memory, use the .compute() method
+        or .gather(). 
     """
 
     # Build paths
@@ -122,6 +98,13 @@ def calculate_composite(
     # Open files and prepare for QA cleaning
     ds = xr.open_mfdataset(array_path)
 
+    # Get metadata from files
+    var_name = list(ds.data_vars.keys())[0]
+    no_meta_vars = ["time", "x", "y", var_name]
+
+    raw_meta = {k: v.to_numpy().tolist() for k,v in dict(ds.variables).items()
+                if k not in no_meta_vars}
+    
     if apply_qa_bitmask:
         ds = apply_bit_mask_group(ds)
 
@@ -134,10 +117,7 @@ def calculate_composite(
             .squeeze()
             )
 
-    if mask:
-        ds.rio.mask()
-
     if save is not None:
-        ds.rio.to_raster(save, tiled=True, windowed=True)
+        ds = ds.rio.to_raster(save, tags=raw_meta)
 
     return ds
