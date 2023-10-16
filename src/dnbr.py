@@ -83,40 +83,29 @@ def apply_bit_mask_group(arr):
     return arr
 
 
-def calculate_dnbr(
-    pre_array,
-    post_array,
-    geometry,
-    buffer_offset_size=180,
+def calculate_composite(
+    path_to_array,
     apply_qa_bitmask=True,
+    geometry=None,
     event_id=None,
+    mask=False,
     save=None,
 ) -> xr.DataArray:
-    """Calculate dNBR for a specific even across timeline
+    """Clean imagery array and calculate mean composite for each geometry
 
-    Following Parks (2019), we calculate the dNBR using two sets of images: one
-    pre- and post-event. We calculate the NBR using the mean composite of both
-    sets and then subtract the pre values from the post period. Since we want to
-    compare events, we calculate an offset using the buffer. Then our dNBR for
-    each pixel is:
-
-        \[
-        \DeltaNBR_{i} = NBR_{i, t=1} - NBR_{i, t=0} - NBR_{offset}
-        \]
+    Transform each of the multidimensional arrays (i.e. NetCDFs) into a median
+    composite. This will effectively take the mean for each of the bands in the
+    array, but the QA band, and return a georeferenced image (GeoTIFF). This
+    function can also mask to the geometry. 
 
     Args:
-        - pre_array (str): path to pre-array path for the event. If event_id is
-          passed, then only the root path will be used.
-        - post_array (str): path to post-array for the same event. If event_id
-          is passed, then only the root path will be used
+        - path_to_array (str): Path to array imagery file
         - geometry (gpd.GeoDataFrame): Spatial dataframe object with event data.
           The function expect that event_id is identical.
-        - buffer_offset_size (int): Buffer distance to build offset value. If
-          None, then no offset will be calculated.
         - apply_qa_bitmask (bool): If `True` apply the bitmask and remove all
           bad pixels following the QA flags
-        - event_id (str): Event ID to find images in pre and post imagery paths
-          and in geometry.
+        - event_id (str): Name of event. Default is `None`. 
+        - mask (bool): If `True`, mask the array to the geometry boundary.
         - save (str): A path to save the restulting array. If `None`, then it
           won't save it.
 
@@ -124,81 +113,31 @@ def calculate_dnbr(
         xr.DataArray
     """
 
-    # Keep this format for all dates
-    format_date = "%Y-%m-%d"
-
     # Build paths
     if event_id is not None:
-        pre_array_path = os.path.join(pre_array, f"{event_id}.nc4")
-        post_array_path = os.path.join(post_array, f"{event_id}.nc4")
+        array_path = os.path.join(path_to_array, f"{event_id}.nc4")
     else:
-        pre_array_path, post_array_path = (pre_array, post_array)
+        array_path = path_to_array
 
     # Open files and prepare for QA cleaning
-    pre_data = xr.open_mfdataset(pre_array_path)
-    post_data = xr.open_mfdataset(post_array_path)
+    ds = xr.open_mfdataset(array_path)
 
     if apply_qa_bitmask:
-        pre_data = apply_bit_mask_group(pre_data)
-        post_data = apply_bit_mask_group(post_data)
+        ds = apply_bit_mask_group(ds)
 
     # Open datasets and calculate mean
-    pre_data = pre_data.mean(dim="time").rio.write_crs("4326").to_array().squeeze()
-    # Notice that we use interp here to account to possible differences in the
-    # coordinates within pre and post. This is similar to a bilinear
-    # interpolation where
-    post_data = (
-        post_data.mean(dim="time")
-        .rio.write_crs("4326")
-        .to_array()
-        .squeeze()
-        .interp_like(pre_data, method="linear")
-    )
-
-    # Calculate offset
-    if buffer_offset_size is not None:
-        # Check projection
-        if not geometry.crs.is_projected:
-            raise TypeError(f"{geometry.crs} no good for these calculations")
-
-        try:
-            geom_event = geometry[geometry.Event_ID == event_id]
-            buffer = geom_event.buffer(buffer_offset_size)
-
-            # Calculate difference and project back to lat/lon
-            offset = buffer.difference(geom_event)
-            offset_planar = offset.to_crs(4326).geometry.values
-
-        except KeyError as e:
-            print(
-                f"Exception {e}: Cannot find event id columnd maybe? {geometry.columns}"
+    ds = (
+            ds
+            .mean(dim="time")
+            .rio.write_crs("4326")
+            .to_array()
+            .squeeze()
             )
 
-        # Caclulate off-set in data
-        pre_data_ring = pre_data.rio.clip(
-            offset_planar, crs=4326, drop=False, invert=False
-        )
-        post_data_ring = post_data.rio.clip(
-            offset_planar, crs=4326, drop=False, invert=False
-        )
-
-        # Calculate NBR
-        pre_nbr_ring = calculate_nbr(pre_data_ring)
-        post_nbr_ring = calculate_nbr(post_data_ring)
-
-        dnbr_ring = (pre_nbr_ring - post_nbr_ring).mean().squeeze()
-
-    else:
-        dnbr_ring = 0
-
-    # Calculate NBR for both periods
-    pre_nbr = calculate_nbr(pre_data)
-    post_nbr = calculate_nbr(post_data)
-
-    # Calculate dNBR for all the pixels
-    dnbr = (pre_nbr - post_nbr) - dnbr_ring
+    if mask:
+        ds.rio.mask()
 
     if save is not None:
-        dnbr.rio.to_raster(save, tiled=True, windowed=True)
+        ds.rio.to_raster(save, tiled=True, windowed=True)
 
-    return dnbr
+    return ds
