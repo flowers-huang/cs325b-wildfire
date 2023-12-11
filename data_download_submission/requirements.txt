@@ -1,0 +1,18 @@
+pip install matplotlib
+pip install pytorch_lightning
+pip install segmentation_models_pytorch
+pip install einops 
+pip install dask
+pip install rioxarray
+pip install rasterio
+pip install planetary_computer
+pip install pystac_client
+pip install adlfs
+pip install stackstac
+pip install rioxarray
+pip install geopandas
+brew install gdal
+pip install GDAL
+pip install dask distributed
+pip install netCDF4
+pip install scipy
