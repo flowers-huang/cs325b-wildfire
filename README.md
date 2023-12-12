@@ -35,6 +35,9 @@ However, the training code 'should' work with any version of pytorch >= 1.10.0 a
 Although note that these requirements were ported from conda and may not be fully accurate. In particular, when downloading the data, gdal will not
 properly install with pip unless a built wheel is already made for your system. If this is not the case, we recommend using the provided environment.yaml
 to create a conda environment with all the required packages.
+```bash
+conda env create -f environment.yaml
+```
 
 ## Data
 Raw data can be downloaded by setting the root path defined in the bash script and running it
