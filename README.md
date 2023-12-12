@@ -30,13 +30,18 @@ Results were obtained using python 3.9. The required packages can be installed w
 ```bash
 pip install -r requirements.txt
 ```
+In particular, we use pytorch lightning 2.1.0 which requires python >= 3.8 as well as pytorch = 1.12.1 with cuda 11.3.
+However, the training code 'should' work with any version of pytorch >= 1.10.0 and python >= 3.6.0 assuming pytorch lightning works.
+Although note that these requirements were ported from conda and may not be fully accurate. In particular, when downloading the data, gdal will not
+properly install with pip unless a built wheel is already made for your system. If this is not the case, we recommend using the provided environment.yaml
+to create a conda environment with all the required packages.
 
 ## Data
 Raw data can be downloaded by setting the root path defined in the bash script and running it
 ```bash
 bash data_dowload_submission/get_data.sh
 ```
-To download data for the scaled expiraments run
+To download data for the scaled experiments run (Note this can take a very long time due to amount of data)
 ```bash
 bash data_dowload_submission/get_data_scaled.sh
 ```
