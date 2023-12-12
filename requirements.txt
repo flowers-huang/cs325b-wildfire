@@ -1,4 +1,6 @@
 pip install matplotlib
+pip install torch torchvision torchaudio
+pip install torchmetrics
 pip install pytorch_lightning
 pip install segmentation_models_pytorch
 pip install einops 
@@ -16,3 +18,4 @@ pip install GDAL
 pip install dask distributed
 pip install netCDF4
 pip install scipy
+pip install tqdm

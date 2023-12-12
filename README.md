@@ -1,8 +1,8 @@
 # Segmenting Wildfire Burned Area in the :earth_africa:
 
-## Tentative data sources
+## Data Sources
 
-Data in our GCP bucket has cropped [Landsat Collection 2][1] imagery for all
+Our data is from cropped [Landsat Collection 2][1] imagery for all
 available fires in California. These labels are extracted from the [MTBS][2],
 a project that measures severity and burned areas across the US. Notice that
 each file name corresponds to the `Event_ID` in the MTBS dataset. The folder
@@ -21,15 +21,47 @@ pretty well for some of the purposes ecologists are interested in, but not for
 segmentation (a lot of the papers use Sentinel-2 data, 3 times higher
 resolution, for example), we should test this.
 
-Data is in NetCDF format and notice that before using you should use the quality
-assurance data to clean some pixels that aren't informative (i.e. snow or
-clouds). If you feel you need more data, which I assume you will because is good
-for out-of distribution (OOD) issues, you can use the code I added under
-`src/landsat.py`. Remember California vegetation is pretty particular, and the
-Mediterranean weather has climatic conditions that make the vegetation greener
-and is dominated by conifers, so is not exactly the tropical Amazon. 
-
-
 
 [1]: https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2#Example-Notebook
 [2]: https://www.mtbs.gov/
+
+## Environment
+Results were obtained using python 3.9. The required packages can be installed with
+```bash
+pip install -r requirements.txt
+```
+
+## Data
+Raw data can be downloaded by setting the root path defined in the bash script and running it
+```bash
+bash data_dowload_submission/get_data.sh
+```
+To download data for the scaled expiraments run
+```bash
+bash data_dowload_submission/get_data_scaled.sh
+```
+
+## Training a segmentation model
+A unet model with resnet34 backbone can be trained by running
+```bash
+python train.py \
+    --model_type "unet" \
+    --backbone "resnet34" \
+    --pretrained True \
+    --device 0 \
+    --num_workers 8 \
+    --log_dir "~/logs" \
+    --data_dir "~/data/processed" \
+    --split 0.8 \
+    --batch_size 32 \
+    --crop_method "scale" \
+    --crop_size 256 \
+    --overlap 64 \
+    --post_only False \
+    --dnbr True
+```
+For a full set of available models and backbones see https://smp.readthedocs.io/en/latest/.
+Results are saved to log_dir and can be visualized with tensorboard
+```bash
+tensorboard --logdir ~/logs
+```

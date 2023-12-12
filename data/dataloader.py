@@ -1,28 +1,15 @@
 import os
 import torch
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
-import segmentation_models_pytorch as smp
 import numpy as np
 from einops import rearrange, pack
 
-from pprint import pprint
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import torchvision
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 
-import pdb
-import dask
-import rioxarray
-import xarray as xr
-import pandas as pd
-
 from tqdm import tqdm
-import warnings
-from itertools import combinations
-from dask.diagnostics import ProgressBar
 
 from .image_processing import rescale_imshow_rgb, calculate_dnbr, resize_and_pad, random_crop, get_overlapping_tiles
 

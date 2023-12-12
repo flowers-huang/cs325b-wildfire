@@ -5,8 +5,6 @@ import numpy as np
 from einops import rearrange, pack
 import matplotlib.pyplot as plt
 
-from pprint import pprint
-
 from data.image_processing import combine_tiles
 
 class UNetModel(pl.LightningModule):

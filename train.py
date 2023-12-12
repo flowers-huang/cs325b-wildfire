@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from data.dataloader import ImageMaskDataset, PrecomputedDataset
 from torch.utils.data import DataLoader
 
-from unet_model import UNetModel
+from model.unet_model import UNetModel
 
 import argparse
 

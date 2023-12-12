@@ -2,7 +2,7 @@ import os
 import argparse
 import geopandas as gpd
 
-from src.landsat_get import Landsat
+from landsat_get_scaled import Landsat
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -55,4 +55,4 @@ if __name__ == "__main__":
     )
 
     print("Start downloading process -- tqdm.tqdm should start soon")
-    ls.execute_search_aoi()
+    ls.execute_search_aoi(bbox_size=(0.75, 0.75))
