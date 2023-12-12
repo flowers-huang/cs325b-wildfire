@@ -19,3 +19,4 @@ pip install dask distributed
 pip install netCDF4
 pip install scipy
 pip install tqdm
+pip install tensorboard

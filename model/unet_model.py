@@ -153,10 +153,10 @@ class UNetModel(pl.LightningModule):
         fn = torch.cat([x["fn"] for x in outputs])
         tn = torch.cat([x["tn"] for x in outputs])
 
-        if stage in ["valid", "test"]:
-            tensorboard = self.logger.experiment
-            plt.hist(smp.metrics.iou_score(tp, fp, fn, tn).cpu().flatten())
-            tensorboard.add_figure(stage, plt.gcf())
+        # if stage in ["valid", "test"]:
+        #     tensorboard = self.logger.experiment
+        #     plt.hist(smp.metrics.iou_score(tp, fp, fn, tn).cpu().flatten())
+        #     tensorboard.add_figure(stage, plt.gcf())
 
         # per image IoU means that we first calculate IoU score for each image 
         # and then compute mean over these scores

@@ -62,7 +62,7 @@ class ImageMaskDataset(Dataset):
         
         for r in NAN_REGIONS:
             self.regions.remove(r)
-        
+            
         self.files_mask = {f: mask_root_dir / f'{f}.npy' for f in self.regions}
         self.files_pre = {f: pre_root_dir / f'{f}.tif' for f in self.regions}
         self.files_post = {f: post_root_dir / f'{f}.tif' for f in self.regions}
@@ -88,8 +88,8 @@ class ImageMaskDataset(Dataset):
         pre_data, post_data = rescale_imshow_rgb(pre_data), rescale_imshow_rgb(post_data)
 
         if not self.sample:
-            mean = STATISTICS['mean']
-            std = STATISTICS['std']
+            mean = STATISTICS['mean'].copy()
+            std = STATISTICS['std'].copy()
 
             if self.post_only:
                 image = post_data

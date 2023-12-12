@@ -12,7 +12,7 @@ import argparse
 torch.set_num_threads(5)
 torch.set_num_interop_threads(5)
 
-from lightning.pytorch.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 def train_model(model_name, backbone, device_id, in_channels=12, pretrained=True, log_dir="logs"):
@@ -80,4 +80,5 @@ if __name__ == "__main__":
     val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
     in_channels = 6 * (2 - int(args.post_only)) + int(args.dnbr)
+    print("Training Model")
     train_model(args.model_type, args.backbone, args.device, in_channels, args.pretrained, args.log_dir)
